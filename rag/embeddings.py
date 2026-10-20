@@ -14,22 +14,22 @@ load_dotenv()
 class GeminiEmbeddingsManager:
     """Manages creation and configuration of Google Gemini vector embeddings."""
 
-    DEFAULT_MODEL = "models/text-embedding-004"
+    DEFAULT_MODEL = "models/gemini-embedding-001"
 
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = DEFAULT_MODEL,
+        model_name: Optional[str] = None,
     ):
         """
         Initialize the Gemini embeddings client.
 
         Args:
             api_key: Optional Gemini API key. If not provided, looks up GOOGLE_API_KEY from environment.
-            model_name: Gemini embedding model name (defaults to 'models/text-embedding-004').
+            model_name: Gemini embedding model name (defaults to 'models/gemini-embedding-001').
         """
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
-        self.model_name = model_name
+        self.model_name = model_name or self.DEFAULT_MODEL
 
         if not self.api_key:
             raise ValueError(

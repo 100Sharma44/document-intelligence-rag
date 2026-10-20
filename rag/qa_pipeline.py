@@ -53,13 +53,13 @@ CRITICAL SECURITY AND ACCURACY INSTRUCTIONS:
 class DocumentIntelligenceQAPipeline:
     """Coordinates vector search retrieval and Gemini-powered grounded QA."""
 
-    DEFAULT_MODEL = "gemini-1.5-flash"
+    DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
     def __init__(
         self,
         vector_store_manager: FAISSVectorStoreManager,
         api_key: Optional[str] = None,
-        model_name: str = DEFAULT_MODEL,
+        model_name: Optional[str] = None,
         temperature: float = 0.0,
     ):
         """
@@ -68,12 +68,12 @@ class DocumentIntelligenceQAPipeline:
         Args:
             vector_store_manager: An initialized FAISSVectorStoreManager.
             api_key: Optional Gemini API key (defaults to GOOGLE_API_KEY env var).
-            model_name: Gemini chat model (default: 'gemini-1.5-flash').
+            model_name: Gemini chat model (default: 'gemini-3.5-flash-lite').
             temperature: LLM temperature (default: 0.0 for deterministic factual grounding).
         """
         self.vector_store_manager = vector_store_manager
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
-        self.model_name = model_name
+        self.model_name = model_name or self.DEFAULT_MODEL
         self.temperature = temperature
 
         if not self.api_key:
@@ -82,11 +82,14 @@ class DocumentIntelligenceQAPipeline:
                 "set the environment variable, or provide it in the sidebar."
             )
 
-        self.llm = ChatGoogleGenerativeAI(
-            model=self.model_name,
-            google_api_key=self.api_key,
-            temperature=self.temperature,
-        )
+        llm_kwargs = {
+            "model": self.model_name,
+            "google_api_key": self.api_key,
+        }
+        if self.temperature is not None and "flash-lite" not in self.model_name:
+            llm_kwargs["temperature"] = self.temperature
+
+        self.llm = ChatGoogleGenerativeAI(**llm_kwargs)
 
     def _format_context(self, documents: List[Document]) -> str:
         """Format retrieved document chunks safely within delimited tags."""
@@ -183,7 +186,16 @@ class DocumentIntelligenceQAPipeline:
 
         try:
             response = self.llm.invoke(messages)
-            answer_text = response.content if isinstance(response.content, str) else str(response.content)
+            raw_content = response.content
+            if isinstance(raw_content, str):
+                answer_text = raw_content
+            elif isinstance(raw_content, list):
+                answer_text = "".join(
+                    part.get("text", "") if isinstance(part, dict) else str(part)
+                    for part in raw_content
+                )
+            else:
+                answer_text = str(raw_content)
         except Exception as e:
             # Handle rate limits, quota, or network errors gracefully
             error_message = str(e)

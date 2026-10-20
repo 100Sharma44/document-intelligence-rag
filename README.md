@@ -25,7 +25,7 @@ graph TD
         A[User Uploads PDFs] --> B[PyMuPDF Text Extraction]
         B --> C[Page-Level Document Objects with Source Metadata]
         C --> D[RecursiveCharacterTextSplitter: Overlapping Chunks]
-        D --> E[Gemini Text Embeddings: models/text-embedding-004]
+        D --> E[Gemini Text Embeddings: models/gemini-embedding-001]
         E --> F[In-Memory FAISS Vector Store Index]
     end
 
@@ -61,7 +61,7 @@ graph TD
    - Attaches unique IDs (`doc_p{page}_c{index}`) to every chunk.
 
 3. **Dense Vector Embeddings (`rag/embeddings.py`):**
-   - Converts text chunks into dense continuous vector representations using Google Gemini's `models/text-embedding-004`.
+   - Converts text chunks into dense continuous vector representations using Google Gemini's `models/gemini-embedding-001`.
    - Captures contextual semantic similarity beyond basic lexical keyword matching.
 
 4. **Vector Search & Session Index Caching (`rag/vector_store.py`):**
@@ -90,7 +90,7 @@ graph TD
 | **PDF Extraction** | PyMuPDF (`pymupdf`) | High-speed, in-memory PDF parsing with page-level layout awareness |
 | **Text Chunking** | LangChain (`RecursiveCharacterTextSplitter`) | Robust multi-delimiter recursive chunking with metadata preservation |
 | **Vector Database** | FAISS (`faiss-cpu`) | High-performance, low-latency in-memory vector similarity search |
-| **LLM & Embeddings** | Google Gemini (`gemini-1.5-flash`, `text-embedding-004`) | State-of-the-art reasoning, low latency, and dense vector embeddings |
+| **LLM & Embeddings** | Google Gemini (`gemini-3.5-flash-lite`, `models/gemini-embedding-001`) | State-of-the-art reasoning, low latency, and dense vector embeddings |
 | **Configuration** | `python-dotenv` | Secure environment variable management; prevents hardcoding secrets |
 | **Testing** | `pytest`, `pytest-mock` | Comprehensive unit and integration test coverage with mocked external APIs |
 
@@ -211,7 +211,7 @@ Once you upload and process your PDFs (e.g., an annual report or technical paper
 Use these talking points to explain the project during your technical interview:
 
 ### 60-Second Elevator Pitch
-> *"I built the Document Intelligence Assistant to solve document analysis and hallucination challenges in enterprise knowledge retrieval. It's an end-to-end RAG application built in Python 3.11 with Streamlit, PyMuPDF, LangChain, FAISS, and Google Gemini. When a user uploads PDFs, PyMuPDF extracts text in memory with page metadata to protect document privacy. LangChain's RecursiveCharacterTextSplitter chunks the text with overlap, preserving page numbers. We embed these chunks using Gemini text-embedding-004 and index them in FAISS. When a user asks a question, FAISS retrieves the top 3 to 5 matching chunks via vector similarity search. We wrap these chunks inside an untrusted context guard and feed them to Gemini 1.5 Flash with strict instructions to answer only from the retrieved text. Crucially, citations are generated from verified PDF metadata rather than model output, giving users full auditability down to the specific page and excerpt."*
+> *"I built the Document Intelligence Assistant to solve document analysis and hallucination challenges in enterprise knowledge retrieval. It's an end-to-end RAG application built in Python 3.11 with Streamlit, PyMuPDF, LangChain, FAISS, and Google Gemini. When a user uploads PDFs, PyMuPDF extracts text in memory with page metadata to protect document privacy. LangChain's RecursiveCharacterTextSplitter chunks the text with overlap, preserving page numbers. We embed these chunks using Gemini gemini-embedding-001 and index them in FAISS. When a user asks a question, FAISS retrieves the top 3 to 5 matching chunks via vector similarity search. We wrap these chunks inside an untrusted context guard and feed them to Gemini 3.5 Flash Lite with strict instructions to answer only from the retrieved text. Crucially, citations are generated from verified PDF metadata rather than model output, giving users full auditability down to the specific page and excerpt."*
 
 ### Key Interview Questions & Answers
 
@@ -266,7 +266,7 @@ Use these talking points to explain the project during your technical interview:
 <details>
 <summary><strong>9. Why did you use Gemini 1.5 Flash instead of larger models?</strong></summary>
 
-*`gemini-1.5-flash` is optimized for high-throughput, low-latency tasks. Because the heavy lifting of knowledge retrieval is already handled by FAISS, the LLM only needs to perform grounded reading comprehension and summarization on 3–5 chunks. Gemini 1.5 Flash offers the ideal balance of speed, cost efficiency, and strong reasoning.*
+*`gemini-3.5-flash-lite` is optimized for high-throughput, low-latency enterprise tasks. Because the heavy lifting of knowledge retrieval is already handled by FAISS, the LLM only needs to perform grounded reading comprehension and summarization on 3–5 chunks. Gemini 3.5 Flash Lite offers the ideal balance of speed, cost efficiency, and strong reasoning.*
 </details>
 
 <details>
